@@ -17,3 +17,5 @@ Route::get('/', function () {
 
 Route::match(['get', 'post'], '/botman', 'BotManController@handle');
 Route::get('/botman/tinker', 'BotManController@tinker');
+Route::get('/data/{value}', 'BotManController@getIndividualData');
+Route::get('/get-global-data', 'BotManController@getGlobalData');
