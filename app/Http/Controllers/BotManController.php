@@ -17,7 +17,7 @@ class BotManController extends Controller
         $botman = app('botman');
 
         $botman->fallback(function($bot) {
-            $bot->reply('Sorry, I did not understand these commands.');
+            $bot->reply('Sorry, I did not understand these commands.'. PHP_EOL . 'Try these commands' . PHP_EOL . '/positif' . PHP_EOL . '/sembuh' . PHP_EOL . '/meninggal');
         });
 
         $botman->hears('Hello', function (BotMan $bot) {
@@ -29,11 +29,30 @@ class BotManController extends Controller
         $botman->hears("hello, I'm {name}", function ($bot, $name) {
             $bot->reply('Hello '.$name.', nice to meet you!');
         });
+        
+        // $botman->hears("/help", function (BotMan $bot) {
+        //     $bot->reply(ButtonTemplate::create('Do you want to know more about BotMan?')
+        //     	->addButton(ElementButton::create('Tell me more')
+        //     	    ->type('postback')
+        //     	    ->payload('tellmemore')
+        //     	)
+        //     	->addButton(ElementButton::create('Show me the docs')
+        //     	    ->url('http://botman.io/')
+        //     	)
+        //     );
+        // });
 
         $botman->hears('/global', function ($bot) {
             $bot->types();
             //Get Data From API
             $results = $this->getGlobalData();
+            $bot->reply($results);
+        });
+
+        $botman->hears('/global {value}', function ($bot, $value) {
+            $bot->types();
+            //Get Data From API
+            $results = $this->getRegionalData($value);
             $bot->reply($results);
         });
 
@@ -78,6 +97,29 @@ class BotManController extends Controller
         $bot->startConversation(new ExampleConversation());
     }
 
+    public function getRegionalData($value)
+    {
+        $client = new Client();
+        $uri = 'https://api.kawalcorona.com';
+        $response = $client->get($uri);
+        $results = json_decode($response->getBody()->getContents());
+        
+
+        foreach ($results as $result) {
+            if ($result->attributes->Country_Region == $value) {
+                
+                $data = "Berikut data keseluruhan COVID-19: ";
+                $data .= "\n" . "> " . $result->attributes->Country_Region;
+                $data .= "\nJumlah kasus: " . $result->attributes->Confirmed;
+                $data .= "\nAktif: " . $result->attributes->Active;
+                $data .= "\nSembuh: " . $result->attributes->Recovered;
+                $data .= "\nMeninggal: " . $result->attributes->Deaths . "\n";
+            }
+        }
+
+        return $data;
+    }
+
     public function getGlobalData()
     {
         $client = new Client();
@@ -86,19 +128,16 @@ class BotManController extends Controller
         $results = json_decode($response->getBody()->getContents());
         
         $data = "Berikut data keseluruhan COVID-19: ";
-
         foreach ($results as $result) {
-            // $data .= "</br>" . "> " . $result->attributes->Country_Region;
-            // $data .= "</br>Jumlah kasus: " . $result->attributes->Confirmed;
-            // $data .= "</br>Aktif: " . $result->attributes->Active;
-            // $data .= "</br>Sembuh: " . $result->attributes->Recovered;
-            // $data .= "</br>Meninggal: " . $result->attributes->Deaths . "</br>";
-
-            $data .= "\n" . "> " . $result->attributes->Country_Region;
-            $data .= "\nJumlah kasus: " . $result->attributes->Confirmed;
-            $data .= "\nAktif: " . $result->attributes->Active;
-            $data .= "\nSembuh: " . $result->attributes->Recovered;
-            $data .= "\nMeninggal: " . $result->attributes->Deaths . "\n";
+            if ($result->attributes->Country_Region == "Indonesia") {
+                $data .= PHP_EOL . "/global " . $result->attributes->Country_Region;
+            }
+            if ($result->attributes->Country_Region == "China") {
+                $data .= PHP_EOL . "/global " . $result->attributes->Country_Region;
+            }
+            if ($result->attributes->Country_Region == "Korea, South") {
+                $data .= PHP_EOL . "/global " . $result->attributes->Country_Region;
+            }
         }
 
         return $data;
