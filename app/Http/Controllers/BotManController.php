@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Conversations\ExampleConversation;
 use BotMan\BotMan\BotMan;
+use BotMan\BotMan\Messages\Attachments\Location;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Mpociot\BotMan\Messages\Message;
@@ -30,7 +31,6 @@ class BotManController extends Controller
         $botman->hears("hello, I'm {name}", function ($bot, $name) {
             $bot->reply('Hello '.$name.', nice to meet you!');
         });
-        
 
         $botman->hears('covid', function ($bot) {
             $bot->types();
@@ -104,6 +104,13 @@ class BotManController extends Controller
             //Get Data From API
             $result = $this->getIndividualData('/meninggal');
             $bot->reply($result);
+        });
+
+        $botman->receivesLocation(function($bot, Location $location) {
+            $lat = $location->getLatitude();
+            $lng = $location->getLongitude();
+            
+            $bot->reply('Lokasi Anda: Lat ' . $lat . ', Lng ' . $lng);
         });
 
         $botman->listen();
@@ -220,7 +227,7 @@ class BotManController extends Controller
         // $data .= "======================";
         // $data .= "\nCovid Virtual Assistant made with love by kataback.com \nfrom Bali Indonesia";
 
-        return $results;
+        return $uri;
     }
 
     public function getMedCareData()
